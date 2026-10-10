@@ -20,8 +20,9 @@
 
 | ファイル | 書くもの |
 | --- | --- |
-| `app.py` | Flask アプリの作成、設定、`login_required`、ログインユーザーの読み込み、エラーハンドラー、全ルート、テンプレート用の日時フィルター |
+| `app.py` | Flask アプリの作成、設定、`CSRFProtect`・`LoginManager` の設定、`user_loader`、エラーハンドラー、全ルート、テンプレート用の日時フィルター |
 | `models.py` | `db`、`BaseModel`、`User`・`Post`・`Like`、テーブル作成の関数 |
+| `forms.py` | Flask-WTF のフォームクラス（`RegisterForm`、`LoginForm` など） |
 
 上記以外の `.py` ファイルは、ユーザーの了承なしに作らない。
 
@@ -41,12 +42,14 @@
 
 - URL は必ず `url_for()` で作る（`"/login"` のように直接書かない）
 - POST の処理が成功したら、必ず `redirect()` する（画面を直接返さない）
-- 入力エラーのときは、`flash()` でメッセージを出して同じテンプレートを再表示する
+- 入力エラーのときは、同じテンプレートを再表示し、フォームの `errors` を各入力欄の下に表示する
+- 入力欄に結びつかないメッセージ（ログイン失敗、成功の通知など）は `flash()` で出す
 - `flash()` のカテゴリーは Bootstrap の色に合わせて `"success"`・`"danger"` を使う
 - 404・403 は `abort(404)`・`abort(403)` で返す（専用のエラー画面は作らない）
 - 5MB 超（413）だけは、エラーハンドラーで `flash()` を出して投稿作成画面へリダイレクトする
-- フォームの値は `request.form.get("名前", "").strip()`、ファイルは `request.files.get("image")` で受け取る
-- フォームの `name` は次のとおりにする
+- フォームは `forms.py` に `FlaskForm` のクラスとして作り、ルートでは `form.validate_on_submit()` で入力チェックする
+- 入力チェックは WTForms の `validators` に書く。データベースを使うチェック（重複など）はフォームの `validate_項目名` メソッドに書く
+- フォームの項目名は次のとおりにする
 
 | 画面 | `name` |
 | --- | --- |
@@ -54,14 +57,22 @@
 | ログイン | `email`、`password` |
 | 投稿作成 | `image`、`caption` |
 
-## 6. ログイン
+## 6. ログイン（Flask-Login）
 
-- ログイン成功時に `session["user_id"]` にユーザーの `id` を入れる
-- `before_request` で `session` からユーザーを読み込み、`g.user` に入れる（未ログインなら `None`）
-- ログイン必須のルートには、自作の `login_required` デコレーターを付ける（未ログインなら `flash()` を出して `login` へリダイレクト）
-- ログアウトは `session.clear()`
+- `User` モデルは `UserMixin` を継承する
+- `@login_manager.user_loader` で、ユーザー ID から `User` を読み込む
+- ログインは `login_user(user)`、ログアウトは `logout_user()`
+- ログイン中のユーザーは `current_user` で参照する（テンプレートでは `current_user.is_authenticated` で判定）
+- ログイン必須のルートには `flask_login` の `@login_required` を付ける（未ログインなら `login` へ移る）
+- ログイン後は常に `index` へリダイレクトする（`?next=` は使わない）
 - パスワードは `werkzeug.security` の `generate_password_hash`・`check_password_hash` を使う
 - ログイン失敗のメッセージは、メールアドレスとパスワードのどちらが違うか分からないようにする
+
+## 6.1 CSRF 対策
+
+- `CSRFProtect(app)` で、すべての POST に CSRF トークンのチェックをかける
+- `FlaskForm` のフォームでは、テンプレートに `{{ form.hidden_tag() }}` を書く
+- `FlaskForm` を使わないボタンだけのフォーム（ログアウト・削除・いいね）では、`<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">` を書く
 
 ## 7. Peewee
 
@@ -90,7 +101,8 @@
 - 画面の文言は日本語
 - `|safe` は使わない（Jinja2 の自動エスケープに任せる）
 - ファイルを送るフォームには `enctype="multipart/form-data"` を付ける
-- 削除・いいねは `<form method="post">` のボタンにする（リンクにしない）
+- ログアウト・削除・いいねは `<form method="post">` のボタンにする（リンクにしない）
+- フォームには `novalidate` を付け、入力チェックはサーバー側（WTForms）の結果を表示する
 - 投稿日時は `app.py` に作った日時フィルターで `2026年10月10日 14:30` の形にする（`f"{dt.year}年{dt.month}月{dt.day}日 {dt:%H:%M}"`）
 - メールアドレスは画面に表示しない（表示名を使う）
 
@@ -103,7 +115,6 @@
 ## 11. やらないこと
 
 - 設計書にない機能・画面・ルートの追加
-- Flask-Login・Flask-WTF・pytest など、新しいパッケージの追加
-- CSRF 対策（今回は対象外）
+- `requirements.txt` にない新しいパッケージの追加（pytest なども使わない）
 - 404・403 用の専用テンプレートの作成
 - 写真を `static/` の中に保存すること

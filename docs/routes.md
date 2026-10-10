@@ -15,12 +15,13 @@
 | `/register` | POST | `register` | ユーザーを登録 | 不要 | `/login` へリダイレクト |
 | `/login` | GET | `login` | ログインフォームを表示 | 不要 | `login.html` を表示 |
 | `/login` | POST | `login` | ログイン処理 | 不要 | `/` へリダイレクト |
-| `/logout` | GET | `logout` | ログアウト | 不要 | `/` へリダイレクト |
+| `/logout` | POST | `logout` | ログアウト | 不要 | `/` へリダイレクト |
 | `/posts/<int:post_id>/like` | POST | `post_like` | いいね／取り消し（余裕があれば） | **必要** | `/posts/<post_id>` へリダイレクト |
 | `/uploads/<filename>` | GET | `uploaded_file` | `uploads/` の写真を返す | 不要 | 画像ファイルを返す |
 
 - 関数名は、テンプレートで `url_for('関数名')` と書くときに使う名前です。
 - GET と POST が同じ URL のものは、1つの関数で `methods=["GET", "POST"]` として処理します。
+- すべての POST は、Flask-WTF の `CSRFProtect` で CSRF トークンをチェックします（トークンがない・正しくない場合は 400）。
 
 ## 2. 各ルートの詳細
 
@@ -54,7 +55,7 @@
 - GET: 登録フォームを表示する
 - POST: 入力をチェックして保存する
   - 成功: パスワードをハッシュ化してユーザーを保存し、`/login` へリダイレクト
-  - 失敗（未入力・表示名が 30 文字超・メールアドレス重複・表示名重複）: エラーメッセージを表示し、`register.html` を再表示
+  - 失敗（未入力・メールアドレスの形式・表示名が 30 文字超・パスワードが 8 文字未満・メールアドレス重複・表示名重複）: エラーメッセージを表示し、`register.html` を再表示
 
 ### `/login`（login）
 
@@ -65,6 +66,7 @@
 
 ### `/logout`（logout）
 
+- POST のみ（メニューの「ログアウト」ボタンから送る）。GET でアクセスすると 405
 - ログイン状態を解除して `/` へリダイレクト
 
 ### `/posts/<int:post_id>/like`（post_like）※余裕があれば
@@ -77,9 +79,9 @@
 
 対象: `post_new`、`post_delete`、`post_like`
 
+- `flask_login` の `@login_required` を付ける
 - 未ログインでアクセスされた場合は `/login` へリダイレクトする
-- ログイン後は `/`（投稿一覧）へ移る
-- 共通の処理なので、デコレーター（例: `login_required`）にまとめると実装が楽になる
+- ログイン後は `/`（投稿一覧）へ移る（`?next=` は使わない）
 
 ## 4. 写真の表示
 

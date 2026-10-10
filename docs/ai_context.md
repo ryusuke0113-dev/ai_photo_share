@@ -20,10 +20,11 @@
 | データベース | SQLite（プロジェクト直下の `app.db`） |
 | 環境変数 | python-dotenv 1.2.4（`.env` を Flask が自動で読み込む） |
 | 見た目 | Bootstrap 5（`base.html` で CDN 読み込み） |
-| ログイン管理 | Flask の `session`（Flask-Login は使わない） |
-| 起動コマンド | `flask --app app run --debug` |
+| ログイン管理 | Flask-Login 0.6.3 |
+| フォーム・CSRF 対策 | Flask-WTF 1.3.0（WTForms 3.2.2）、メールアドレスの形式チェックに email-validator 2.3.0 |
+| 起動コマンド | `python app.py`（ポート 8000、デバッグモード。`app.py` で `.env` を読み込む） |
 
-上記以外のパッケージは追加しない（Flask-Login、Flask-WTF、pytest なども使わない）。
+上記以外のパッケージは追加しない（pytest なども使わない）。
 
 ## 3. ディレクトリ構成
 
@@ -31,6 +32,7 @@
 ai_photo_share/
 ├── app.py              # 設定・ルート・ログイン関連の処理
 ├── models.py           # データベース接続・モデル（User / Post / Like）
+├── forms.py            # Flask-WTF のフォーム（RegisterForm / LoginForm など）
 ├── requirements.txt
 ├── .env                # SECRET_KEY（Git に含めない）
 ├── .gitignore
@@ -67,14 +69,14 @@ ai_photo_share/
 
 - 登録成功後は `/login` へ、ログイン・ログアウト・投稿・削除の成功後は `/` へリダイレクトする
 - メールアドレスと表示名は、どちらも重複不可
-- 表示名は 30 文字まで、キャプションは 140 文字まで（キャプションは空欄可）
+- 表示名は 30 文字まで、キャプションは 140 文字まで（キャプションは空欄可）、パスワードは 8 文字以上
 - 写真は JPG・PNG のみ、5MB まで
 - 投稿一覧は新しい順に縦1列で表示し、ページ分けはしない
 - 削除ボタンといいねボタンは、投稿詳細画面にだけ置く（一覧には置かない）
 - 削除できるのは投稿者本人のみ。他人の投稿の削除は 403
 - 存在しない投稿は 404。404・403 は Flask 標準のエラー画面のままでよい
 - 投稿日時は `2026年10月10日 14:30` の形で表示する
-- CSRF 対策は今回は対象外
+- すべての POST に CSRF 対策をかける（Flask-WTF の `CSRFProtect`）。ログアウトも POST のボタンで行う
 
 ## 6. 今回作らないもの
 

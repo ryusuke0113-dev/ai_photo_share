@@ -2,7 +2,7 @@
 
 - 上から順に1つずつ実装する（ルールは `docs/ai_context.md` の「AI の作業ルール」）
 - ユーザーがブラウザで確認して「OK」と伝えたら、`[ ]` を `[x]` にする
-- 起動コマンド: `flask --app app run --debug`（ブラウザで http://127.0.0.1:5000 を開く）
+- 起動コマンド: `python app.py`（ブラウザで http://127.0.0.1:8000 を開く）
 
 ## フェーズ 1: 準備
 
@@ -19,62 +19,66 @@
   - `.env` に `SECRET_KEY` を書く（ランダムな長い文字列）
   - `app.py` で Flask アプリを作り、`SECRET_KEY` を環境変数から読み込む
   - `/`（`index`）は仮の文字（例: 「写真共有アプリ」）を返すだけ
-- 確認: 起動して http://127.0.0.1:5000 に仮の文字が表示される
+- 確認: 起動して http://127.0.0.1:8000 に仮の文字が表示される
 
-### [ ] T-03 データベースとモデルを作る
+### [ ] T-03 データベースと User モデルを作る
 
 - 対象: `models.py`、`app.py`
 - 内容
-  - `models.py` に `SqliteDatabase`（`app.db`、外部キー有効）、`BaseModel`、`User`、`Post` を作る（`Like` は T-15 で作る）
+  - `models.py` に `SqliteDatabase`（`app.db`、外部キー有効）、`BaseModel`、`User`（`UserMixin` を継承）を作る
   - テーブル作成用の関数を作り、`app.py` の起動時に呼ぶ
   - リクエストごとに接続・切断する処理を `app.py` に入れる
-- 対応: `docs/database.md` の `users`・`posts`
+  - `Post` は T-10、`Like` は T-15 で追加する
+- 対応: `docs/database.md` の `users`
 - 確認: 起動するとプロジェクト直下に `app.db` が作られ、エラーが出ない
 
 ### [ ] T-04 共通レイアウトと仮のトップページを作る
 
-- 対象: `templates/base.html`、`templates/index.html`、`static/css/style.css`、`app.py`
+- 対象: `templates/base.html`、`templates/index.html`、`app.py`
 - 内容
   - `base.html` に Bootstrap 5（CDN）、ヘッダー（アプリ名・メニュー）、`flash` メッセージ表示欄を作る
-  - メニューは、この時点では未ログイン用（「登録」「ログイン」）だけでよい
   - `index` を `index.html`（仮の文字だけ）を表示する形に変える
+  - `static/css/style.css` は、Bootstrap で足りない見た目が出てきたときに作る
 - 確認: トップページにヘッダーと仮の文字が、Bootstrap の見た目で表示される
 
-## フェーズ 2: ユーザー登録・ログイン
+## フェーズ 2: ユーザー登録・ログイン（Flask-Login・Flask-WTF）
+
+T-03〜T-09 は、認証機能としてまとめて実装済み（ユーザーの確認待ち）。
 
 ### [ ] T-05 ユーザー登録画面を表示する
 
-- 対象: `templates/register.html`、`app.py`
-- 内容: `GET /register`（`register`）で、メールアドレス・表示名・パスワードのフォームを表示する
+- 対象: `forms.py`、`templates/register.html`、`app.py`
+- 内容: `forms.py` に `RegisterForm` を作り、`GET /register`（`register`）でメールアドレス・表示名・パスワードのフォームを表示する
 - 対応: F-01、S-04
 - 確認: メニューの「登録」から登録画面が表示される
 
 ### [ ] T-06 ログイン画面を表示する
 
-- 対象: `templates/login.html`、`app.py`
-- 内容: `GET /login`（`login`）で、メールアドレス・パスワードのフォームを表示する
+- 対象: `forms.py`、`templates/login.html`、`app.py`
+- 内容: `forms.py` に `LoginForm` を作り、`GET /login`（`login`）でメールアドレス・パスワードのフォームを表示する
 - 対応: F-05、S-05
 - 確認: メニューの「ログイン」からログイン画面が表示される。登録画面とログイン画面を相互にリンクで移動できる
 
 ### [ ] T-07 ユーザー登録の処理を作る
 
-- 対象: `app.py`、`templates/register.html`
+- 対象: `app.py`、`forms.py`、`templates/register.html`
 - 内容
-  - `POST /register` で入力をチェックし、パスワードをハッシュ化して `User` を保存する
-  - チェック: 未入力、表示名が 30 文字超、メールアドレス重複、表示名重複
+  - `CSRFProtect` を設定し、すべての POST に CSRF 対策をかける
+  - `POST /register` で `form.validate_on_submit()` を使って入力をチェックし、パスワードをハッシュ化して `User` を保存する
+  - チェック: 未入力、メールアドレスの形式、表示名が 30 文字超、パスワードが 8 文字未満、メールアドレス重複、表示名重複
   - 成功: 成功メッセージを出して `/login` へリダイレクト
-  - 失敗: エラーメッセージを出して登録画面を再表示（入力したメールアドレス・表示名は残す）
+  - 失敗: 各入力欄の下にエラーを出して登録画面を再表示（入力したメールアドレス・表示名は残す）
 - 対応: F-02〜F-04
 - 確認
   - 正しく入力すると、ログイン画面に移って成功メッセージが出る
-  - 未入力・31 文字以上の表示名・登録済みのメールアドレス・登録済みの表示名で、それぞれエラーメッセージが出る
+  - 未入力・形式の違うメールアドレス・31 文字以上の表示名・7 文字以下のパスワード・登録済みのメールアドレス・登録済みの表示名で、それぞれエラーメッセージが出る
 
 ### [ ] T-08 ログインの処理を作る
 
 - 対象: `app.py`、`templates/login.html`
 - 内容
-  - `POST /login` でメールアドレスとパスワードを確認し、成功したら `session["user_id"]` を保存する
-  - リクエストごとに `session` からログイン中のユーザーを読み込み、`g.user` に入れる（未ログインなら `None`）
+  - `LoginManager` と `user_loader` を設定する
+  - `POST /login` でメールアドレスとパスワードを確認し、成功したら `login_user(user)` でログイン状態にする
   - 成功: `/` へリダイレクト。失敗: 「メールアドレスまたはパスワードが違います」を出してログイン画面を再表示
 - 対応: F-06、F-07
 - 確認
@@ -85,31 +89,33 @@
 
 - 対象: `app.py`、`templates/base.html`
 - 内容
-  - `GET /logout`（`logout`）で `session` を消して `/` へリダイレクト
-  - メニューを、ログイン中は「表示名」「投稿する」「ログアウト」、未ログイン時は「登録」「ログイン」に切り替える
-  - 「投稿する」のリンク先は T-10 で作る `post_new`。T-10 までは `#` にしておく
+  - `POST /logout`（`logout`）で `logout_user()` を呼んで `/` へリダイレクト（メニューのボタンは CSRF トークン付きの POST フォーム）
+  - メニューを、ログイン中は「表示名」「ログアウト」、未ログイン時は「登録」「ログイン」に切り替える
+  - 「投稿する」は T-10 でメニューに追加する
 - 対応: F-08、F-09
 - 確認: ログインするとメニューに表示名が出て、ログアウトすると元のメニューに戻る
 
 ## フェーズ 3: 投稿
 
-### [ ] T-10 投稿作成画面とログイン必須の処理を作る
+### [ ] T-10 投稿作成画面を作る
 
-- 対象: `app.py`、`templates/post_new.html`、`templates/base.html`
+- 対象: `models.py`、`forms.py`、`app.py`、`templates/post_new.html`、`templates/base.html`
 - 内容
-  - ログイン必須にするデコレーター `login_required` を作る（未ログインならメッセージを出して `/login` へ）
-  - `GET /posts/new`（`post_new`）で、写真とキャプションのフォームを表示する（`enctype="multipart/form-data"`）
-  - メニューの「投稿する」のリンク先を `post_new` にする
+  - `models.py` に `Post` を追加し、テーブル作成の対象に加える
+  - `forms.py` に `PostForm`（`image`、`caption`）を作る
+  - `GET /posts/new`（`post_new`）に `flask_login` の `@login_required` を付け、写真とキャプションのフォームを表示する（`enctype="multipart/form-data"`）
+  - メニューのログイン中の項目に「投稿する」（`post_new`）を追加する
 - 対応: F-10、F-14、S-03
 - 確認
   - ログイン中は「投稿する」から投稿作成画面が表示される
-  - ログアウトした状態で http://127.0.0.1:5000/posts/new を開くと、ログイン画面に移る
+  - ログアウトした状態で http://127.0.0.1:8000/posts/new を開くと、ログイン画面に移る
 
 ### [ ] T-11 投稿の保存処理を作る
 
-- 対象: `app.py`、`.gitignore`、`templates/post_new.html`
+- 対象: `app.py`、`forms.py`、`.gitignore`、`templates/post_new.html`
 - 内容
   - `.gitignore` に `uploads/` を追加する
+  - `PostForm` に入力チェックを付ける（`flask_wtf.file` の `FileRequired`・`FileAllowed`、キャプションの `Length`）
   - 起動時にプロジェクト直下の `uploads/` がなければ作る
   - `MAX_CONTENT_LENGTH` を 5MB にし、超えた場合（413）はメッセージを出して投稿作成画面へ戻す
   - `POST /posts/new` で入力をチェックし、写真を `uuid` のファイル名で `uploads/` に保存して、`Post` を保存する
@@ -146,7 +152,7 @@
 - 対応: F-18〜F-20、S-02
 - 確認
   - 一覧の写真をクリックすると、その投稿の詳細が表示される
-  - http://127.0.0.1:5000/posts/9999 を開くと 404 になる
+  - http://127.0.0.1:8000/posts/9999 を開くと 404 になる
 
 ### [ ] T-14 投稿の削除を作る
 
