@@ -34,9 +34,9 @@
 | 名前 | 値 |
 | --- | --- |
 | `SECRET_KEY` | 環境変数 `SECRET_KEY`（`.env`）から読み込む。コードに直接書かない |
-| `UPLOAD_FOLDER` | プロジェクト直下の `uploads/`（**`static/` の中ではない**） |
+| `UPLOAD_FOLDER` | プロジェクト直下の `uploads/posts/`（**`static/` の中ではない**） |
 | `MAX_CONTENT_LENGTH` | `5 * 1024 * 1024`（5MB） |
-| 許可する拡張子 | `jpg`、`jpeg`、`png`（小文字にして比較する） |
+| 許可する拡張子 | `png`、`jpg`、`jpeg`、`gif`（小文字にして比較する。`forms.py` の `ALLOWED_EXTENSIONS`） |
 
 ## 5. Flask
 
@@ -88,9 +88,10 @@
 
 ## 8. 写真
 
-- 保存先はプロジェクト直下の `uploads/`。起動時に `mkdir(exist_ok=True)` で作る
+- 保存先はプロジェクト直下の `uploads/posts/`。起動時に `mkdir(parents=True, exist_ok=True)` で作る
+- `uploads/posts/.gitkeep` は消さない（フォルダを Git に残すため）
 - 保存するファイル名は `uuid.uuid4().hex` + 元の拡張子（小文字）。ユーザーが付けたファイル名は使わない
-- 拡張子のチェックはサーバー側で必ず行う
+- 形式のチェックはサーバー側で必ず行う（`FileAllowed` で拡張子、`PostForm.validate_image` でファイル先頭のバイト列）
 - 表示は `url_for("uploaded_file", filename=post.image_filename)`。`uploaded_file` は `send_from_directory(UPLOAD_FOLDER, filename)` で返す
 - 投稿を削除するときは、`Path.unlink(missing_ok=True)` で写真ファイルも削除する
 
@@ -110,7 +111,7 @@
 
 - 自動テスト（pytest など）は書かない
 - `docs/tasks.md` の「確認」の手順に沿って、ブラウザで手動確認する
-- データをリセットしたいときは、サーバーを止めて `app.db` と `uploads/` の中身を削除する
+- データをリセットしたいときは、サーバーを止めて `app.db` と `uploads/posts/` の中身（`.gitkeep` 以外）を削除する
 
 ## 11. やらないこと
 

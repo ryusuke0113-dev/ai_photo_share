@@ -1,23 +1,31 @@
 import os
+import uuid
 from pathlib import Path
 
 from dotenv import load_dotenv
-from flask import Flask, flash, redirect, render_template, url_for
-from flask_login import LoginManager, login_user, logout_user
+from flask import Flask, flash, redirect, render_template, send_from_directory, url_for
+from flask_login import LoginManager, current_user, login_required, login_user, logout_user
 from flask_wtf.csrf import CSRFProtect
 from peewee import IntegrityError
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from forms import LoginForm, RegisterForm
-from models import User, create_tables, db
+from forms import LoginForm, PostForm, RegisterForm
+from models import Post, User, create_tables, db
+
+BASE_DIR = Path(__file__).resolve().parent
 
 # python app.py で起動したときも .env を読み込む
-load_dotenv(Path(__file__).resolve().parent / ".env")
+load_dotenv(BASE_DIR / ".env")
 
 app = Flask(__name__)
 
 # 秘密鍵は .env から読み込む（コードに直接書かない）
 app.config["SECRET_KEY"] = os.environ["SECRET_KEY"]
+
+# 写真の保存先（static/ の外）と、受け付けるリクエストの最大サイズ（5MB）
+app.config["UPLOAD_FOLDER"] = BASE_DIR / "uploads" / "posts"
+app.config["MAX_CONTENT_LENGTH"] = 5 * 1024 * 1024
+app.config["UPLOAD_FOLDER"].mkdir(parents=True, exist_ok=True)
 
 # すべての POST リクエストに CSRF 対策をかける
 csrf = CSRFProtect(app)
@@ -49,10 +57,65 @@ def close_db(exc):
         db.close()
 
 
-# トップページ（今は仮の文字を表示するだけ）
+# 5MB を超えるリクエストは、メッセージを出して投稿作成画面へ戻す
+@app.errorhandler(413)
+def file_too_large(error):
+    flash("ファイルが大きすぎます。5MB 以下の画像を選んでください", "danger")
+    return redirect(url_for("post_new"))
+
+
+# 日時を「2026年10月10日 14:30」の形にする
+@app.template_filter("datetime_ja")
+def datetime_ja(value):
+    return f"{value.year}年{value.month}月{value.day}日 {value:%H:%M}"
+
+
+# トップページ（投稿一覧。新しい順）
 @app.route("/")
 def index():
-    return render_template("index.html")
+    posts = (
+        Post.select(Post, User)
+        .join(User)
+        .order_by(Post.created_at.desc(), Post.id.desc())
+    )
+    return render_template("index.html", posts=posts)
+
+
+# 投稿作成
+@app.route("/posts/new", methods=["GET", "POST"])
+@login_required
+def post_new():
+    form = PostForm()
+
+    # 入力チェックに通ったら、写真を安全な名前で保存してから投稿を保存する
+    if form.validate_on_submit():
+        image = form.image.data
+        extension = image.filename.rsplit(".", 1)[-1].lower()
+        filename = f"{uuid.uuid4().hex}.{extension}"
+        image_path = app.config["UPLOAD_FOLDER"] / filename
+        image.save(image_path)
+
+        try:
+            Post.create(
+                user=current_user.id,
+                image_filename=filename,
+                caption=form.caption.data or "",
+            )
+        except IntegrityError:
+            image_path.unlink(missing_ok=True)
+            flash("投稿の保存に失敗しました。もう一度お試しください", "danger")
+            return render_template("post_new.html", form=form)
+
+        flash("投稿しました", "success")
+        return redirect(url_for("index"))
+
+    return render_template("post_new.html", form=form)
+
+
+# uploads/posts/ の写真を返す（static/ の外にあるので専用のルートで配信する）
+@app.route("/uploads/posts/<filename>")
+def uploaded_file(filename):
+    return send_from_directory(app.config["UPLOAD_FOLDER"], filename)
 
 
 # ユーザー登録

@@ -2,7 +2,7 @@ import datetime
 from pathlib import Path
 
 from flask_login import UserMixin
-from peewee import AutoField, CharField, DateTimeField, Model, SqliteDatabase
+from peewee import AutoField, CharField, DateTimeField, ForeignKeyField, Model, SqliteDatabase
 
 BASE_DIR = Path(__file__).resolve().parent
 
@@ -27,7 +27,19 @@ class User(UserMixin, BaseModel):
         table_name = "users"
 
 
+# 投稿（写真そのものは uploads/posts/ に保存し、ここにはファイル名だけを保存する）
+class Post(BaseModel):
+    id = AutoField()
+    user = ForeignKeyField(User, backref="posts")
+    image_filename = CharField(max_length=255, unique=True)
+    caption = CharField(max_length=140, default="")
+    created_at = DateTimeField(default=datetime.datetime.now)
+
+    class Meta:
+        table_name = "posts"
+
+
 # テーブルがなければ作成する
 def create_tables():
     with db:
-        db.create_tables([User])
+        db.create_tables([User, Post])

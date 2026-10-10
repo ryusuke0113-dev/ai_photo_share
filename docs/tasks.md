@@ -112,27 +112,27 @@ T-03〜T-09 は、認証機能としてまとめて実装済み（ユーザー�
 
 ### [ ] T-11 投稿の保存処理を作る
 
-- 対象: `app.py`、`forms.py`、`.gitignore`、`templates/post_new.html`
+- 対象: `app.py`、`forms.py`、`.gitignore`、`uploads/posts/.gitkeep`、`templates/post_new.html`
 - 内容
-  - `.gitignore` に `uploads/` を追加する
-  - `PostForm` に入力チェックを付ける（`flask_wtf.file` の `FileRequired`・`FileAllowed`、キャプションの `Length`）
-  - 起動時にプロジェクト直下の `uploads/` がなければ作る
+  - `.gitignore` に `uploads/posts/*` と `!uploads/posts/.gitkeep` を追加し、`uploads/posts/.gitkeep` を置く
+  - `PostForm` に入力チェックを付ける（`FileRequired`・`FileAllowed`、ファイル先頭のバイト列の確認、キャプションの `Length`）
+  - 起動時にプロジェクト直下の `uploads/posts/` がなければ作る
   - `MAX_CONTENT_LENGTH` を 5MB にし、超えた場合（413）はメッセージを出して投稿作成画面へ戻す
-  - `POST /posts/new` で入力をチェックし、写真を `uuid` のファイル名で `uploads/` に保存して、`Post` を保存する
-  - チェック: 写真が選ばれていない、JPG・PNG 以外、キャプションが 140 文字超
+  - `POST /posts/new` で入力をチェックし、写真を `uuid` のファイル名で `uploads/posts/` に保存して、`Post` を保存する
+  - チェック: 写真が選ばれていない、png・jpg・jpeg・gif 以外、中身が画像でない、キャプションが 140 文字超
   - 成功: 成功メッセージを出して `/` へリダイレクト
 - 対応: F-11〜F-13
 - 確認
-  - JPG・PNG を投稿すると、トップページに移り、`uploads/` に写真ファイルが増えている
+  - png・jpg・gif を投稿すると、トップページに移り、`uploads/posts/` に写真ファイルが増えている
   - キャプションが空欄でも投稿できる
-  - 写真なし・GIF などの別形式・141 文字以上のキャプションで、それぞれエラーメッセージが出る
+  - 写真なし・別形式（.txt など）・拡張子だけ変えた偽の画像・141 文字以上のキャプションで、それぞれエラーメッセージが出る
   - 5MB を超える写真でエラーメッセージが出る（開発用サーバーでは、接続エラーの画面になる場合もある）
 
 ### [ ] T-12 投稿一覧を作る
 
 - 対象: `app.py`、`templates/index.html`
 - 内容
-  - `GET /uploads/<filename>`（`uploaded_file`）で、`uploads/` の写真を `send_from_directory` で返す
+  - `GET /uploads/posts/<filename>`（`uploaded_file`）で、`uploads/posts/` の写真を `send_from_directory` で返す
   - `index` で投稿を新しい順に取得し（`User` を `join`）、縦1列で表示する
   - 表示項目: 写真、キャプション、投稿者の表示名、投稿日時（`2026年10月10日 14:30` の形）
   - 投稿が0件なら「まだ投稿がありません」と表示する
@@ -164,7 +164,7 @@ T-03〜T-09 は、認証機能としてまとめて実装済み（ユーザー�
 - 対応: F-21〜F-23
 - 確認
   - 自分の投稿の詳細にだけ「削除」ボタンが出る
-  - 削除すると一覧から消え、`uploads/` の写真ファイルも消えている
+  - 削除すると一覧から消え、`uploads/posts/` の写真ファイルも消えている
   - 別のユーザーでログインし、他人の投稿の詳細に「削除」ボタンが出ない
 
 ## フェーズ 4: いいね（必須機能がすべて完了してから）

@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}投稿する{% endblock %}
+
+{% block content %}
+  <div class="form-page">
+    <h1 class="form-page__title">
+      New post<span class="ps-ruby">新しい投稿</span>
+    </h1>
+    <p class="form-page__lead">写真を1枚と、ひとことを。</p>
+
+    <form method="post" enctype="multipart/form-data" novalidate>
+      {{ form.hidden_tag() }}
+
+      <div class="form-page__field">
+        <label for="{{ form.image.id }}" class="form-page__label">
+          <span class="ps-glyph">##</span>{{ form.image.label.text }}
+        </label>
+        {{ form.image(class="form-page__input" + (" is-invalid" if form.image.errors else ""),
+                      accept=".png,.jpg,.jpeg,.gif") }}
+        <p class="form-page__hint">png / jpg / jpeg / gif ・ 5MB まで</p>
+        {% for error in form.image.errors %}
+          <p class="form-page__error"><span class="ps-glyph">!!</span>{{ error }}</p>
+        {% endfor %}
+      </div>
+
+      <div class="form-page__field">
+        <label for="{{ form.caption.id }}" class="form-page__label">
+          <span class="ps-glyph">&gt;&gt;</span>{{ form.caption.label.text }}（任意）
+        </label>
+        {{ form.caption(class="form-page__input" + (" is-invalid" if form.caption.errors else ""),
+                        rows="3", maxlength="140", placeholder="どこで、どんな日でしたか") }}
+        <p class="form-page__hint">140文字まで</p>
+        {% for error in form.caption.errors %}
+          <p class="form-page__error"><span class="ps-glyph">!!</span>{{ error }}</p>
+        {% endfor %}
+      </div>
+
+      <button type="submit" class="form-page__submit">-&gt; 投稿する</button>
+    </form>
+
+    <p class="form-page__footer">
+      <a href="{{ url_for('index') }}" class="ps-link">&lt;- 一覧へ戻る</a>
+    </p>
+  </div>
+{% endblock %}

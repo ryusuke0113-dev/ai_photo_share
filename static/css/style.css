@@ -1,0 +1,235 @@
+/* 共通の色とフォント（白地・明朝の本文・細い等幅のラベル・青紫の差し色） */
+:root {
+  --ps-text: #000;
+  --ps-primary: #4b23ea;
+  --ps-error: #c00;
+  --ps-mute: rgba(0, 0, 0, 0.5);
+  --ps-subtle: rgba(0, 0, 0, 0.2);
+  --ps-faint: rgba(0, 0, 0, 0.04);
+  --ps-font-body: "Shippori Mincho", "Yu Mincho", YuMincho, "Hiragino Mincho ProN", serif;
+  --ps-font-label: "Fira Code", monospace;
+}
+
+/* 英単語のすぐ後ろに小さく添える日本語 */
+.ps-ruby {
+  margin-left: 0.1em;
+  font-size: 0.4em;
+  vertical-align: top;
+}
+
+/* ラベルの前に付ける記号（@@ や ** など） */
+.ps-glyph {
+  margin-right: 0.4em;
+  color: var(--ps-text);
+  font-family: var(--ps-font-label);
+}
+
+/* ===== フォーム画面（ログイン・投稿作成） ===== */
+.form-page {
+  max-width: 26rem;
+  margin: 3rem auto 4rem;
+  color: var(--ps-text);
+  font-family: var(--ps-font-body);
+}
+
+.form-page__title,
+.feed__title {
+  margin-bottom: 1rem;
+  font-family: var(--ps-font-body);
+  font-size: 2.75rem;
+  font-weight: 400;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+}
+
+.form-page__lead {
+  margin-bottom: 2.5rem;
+  font-size: 1.05rem;
+  line-height: 1.9;
+}
+
+.form-page__lead .ps-ruby {
+  font-size: 0.6em;
+}
+
+.form-page__field {
+  margin-bottom: 1.75rem;
+}
+
+.form-page__label {
+  display: block;
+  margin-bottom: 0.25rem;
+  color: var(--ps-mute);
+  font-family: var(--ps-font-label);
+  font-size: 0.8rem;
+  font-weight: 300;
+  letter-spacing: 0.02em;
+}
+
+/* 枠線は下線だけにする */
+.form-page__input {
+  width: 100%;
+  padding: 0.5rem 0;
+  border: 0;
+  border-bottom: 1px solid var(--ps-subtle);
+  border-radius: 0;
+  background: transparent;
+  color: var(--ps-text);
+  font-family: var(--ps-font-label);
+  font-size: 1rem;
+  font-weight: 300;
+  transition: border-color 0.2s;
+}
+
+textarea.form-page__input {
+  resize: vertical;
+  font-family: var(--ps-font-body);
+  line-height: 1.8;
+}
+
+.form-page__input::placeholder {
+  color: var(--ps-subtle);
+}
+
+.form-page__input:focus {
+  outline: none;
+  border-bottom-color: var(--ps-primary);
+}
+
+.form-page__input.is-invalid {
+  border-bottom-color: var(--ps-error);
+}
+
+/* ファイル選択欄の「ファイルを選択」ボタン */
+.form-page__input[type="file"] {
+  font-size: 0.85rem;
+}
+
+.form-page__input[type="file"]::file-selector-button {
+  margin-right: 0.75rem;
+  padding: 0.35rem 0.9rem;
+  border: 1px solid var(--ps-text);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ps-text);
+  font-family: var(--ps-font-label);
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+}
+
+.form-page__input[type="file"]::file-selector-button:hover {
+  border-color: var(--ps-primary);
+  background: var(--ps-primary);
+  color: #fff;
+}
+
+.form-page__hint {
+  margin: 0.4rem 0 0;
+  color: var(--ps-mute);
+  font-family: var(--ps-font-label);
+  font-size: 0.75rem;
+  font-weight: 300;
+}
+
+.form-page__error {
+  margin: 0.4rem 0 0;
+  color: var(--ps-error);
+  font-family: var(--ps-font-label);
+  font-size: 0.8rem;
+}
+
+.form-page__error .ps-glyph {
+  color: var(--ps-error);
+}
+
+.form-page__submit {
+  width: 100%;
+  margin-top: 0.5rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--ps-text);
+  border-radius: 999px;
+  background: var(--ps-text);
+  color: #fff;
+  font-family: var(--ps-font-label);
+  font-size: 0.9rem;
+  letter-spacing: 0.04em;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+.form-page__submit:hover,
+.form-page__submit:focus-visible {
+  border-color: var(--ps-primary);
+  background: var(--ps-primary);
+}
+
+.form-page__footer {
+  margin-top: 2rem;
+  text-align: center;
+}
+
+/* 等幅の下線リンク（フォーム画面・投稿一覧で共通） */
+.ps-link {
+  border-bottom: 1px solid var(--ps-subtle);
+  color: var(--ps-text);
+  font-family: var(--ps-font-label);
+  font-size: 0.85rem;
+  text-decoration: none;
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.ps-link:hover {
+  border-color: var(--ps-primary);
+  color: var(--ps-primary);
+}
+
+/* ===== 投稿一覧（縦1列） ===== */
+.feed {
+  max-width: 34rem;
+  margin: 3rem auto 4rem;
+  color: var(--ps-text);
+  font-family: var(--ps-font-body);
+}
+
+.feed__title {
+  margin-bottom: 2.5rem;
+}
+
+.feed__item {
+  margin-bottom: 3.5rem;
+}
+
+.feed__image {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 0.5rem;
+  background: var(--ps-faint);
+}
+
+.feed__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+  margin-top: 0.75rem;
+  font-family: var(--ps-font-label);
+  font-size: 0.8rem;
+  font-weight: 300;
+}
+
+.feed__time {
+  color: var(--ps-mute);
+}
+
+.feed__caption {
+  margin: 0.5rem 0 0;
+  font-size: 1.05rem;
+  line-height: 1.9;
+  white-space: pre-wrap;
+}
+
+.feed__empty {
+  color: var(--ps-mute);
+  font-family: var(--ps-font-label);
+  font-size: 0.9rem;
+}

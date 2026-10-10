@@ -25,7 +25,7 @@ alwaysApply: true
 ## 秘密情報
 
 - `SECRET_KEY` などはコードに書かず、`.env` から読み込む
-- `.env`・`app.db`・`uploads/` を Git に含めない
+- `.env`・`app.db`・アップロードされた写真（`uploads/posts/*`）を Git に含めない
 
 ```python
 # NG
@@ -36,6 +36,6 @@ app.config["SECRET_KEY"] = os.environ["SECRET_KEY"]
 
 ## 画像の保存先
 
-- アップロードした写真は、プロジェクト直下の `uploads/` に保存する
+- アップロードした写真は、プロジェクト直下の `uploads/posts/` に保存する
 - `static/` の中（`static/uploads/` など）には置かない
 - 表示は `url_for("uploaded_file", filename=...)` を使い、`send_from_directory` で返す

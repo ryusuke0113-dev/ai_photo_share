@@ -17,7 +17,7 @@
 | `/login` | POST | `login` | ログイン処理 | 不要 | `/` へリダイレクト |
 | `/logout` | POST | `logout` | ログアウト | 不要 | `/` へリダイレクト |
 | `/posts/<int:post_id>/like` | POST | `post_like` | いいね／取り消し（余裕があれば） | **必要** | `/posts/<post_id>` へリダイレクト |
-| `/uploads/<filename>` | GET | `uploaded_file` | `uploads/` の写真を返す | 不要 | 画像ファイルを返す |
+| `/uploads/posts/<filename>` | GET | `uploaded_file` | `uploads/posts/` の写真を返す | 不要 | 画像ファイルを返す |
 
 - 関数名は、テンプレートで `url_for('関数名')` と書くときに使う名前です。
 - GET と POST が同じ URL のものは、1つの関数で `methods=["GET", "POST"]` として処理します。
@@ -41,7 +41,8 @@
 - POST: 入力をチェックして保存する
   - 成功: 写真を保存し、投稿をデータベースに保存して `/` へリダイレクト
   - 失敗: エラーメッセージを表示し、`post_new.html` を再表示
-- チェック内容: 写真があるか、JPG・PNG か、5MB 以下か、キャプションが 140 文字以下か
+- チェック内容: 写真があるか、png・jpg・jpeg・gif か（中身も確認）、5MB 以下か、キャプションが 140 文字以下か
+- 5MB を超えた場合（413）は、メッセージを出して `/posts/new` へリダイレクト
 
 ### `/posts/<int:post_id>/delete`（post_delete）
 
@@ -85,8 +86,8 @@
 
 ## 4. 写真の表示
 
-- アップロードした写真は、プロジェクト直下の `uploads/` に保存する（`static/` の中ではない）
-- `uploads/` は Flask の静的ファイル機能の対象外なので、`/uploads/<filename>`（`uploaded_file`）で `send_from_directory` を使って返す
+- アップロードした写真は、プロジェクト直下の `uploads/posts/` に保存する（`static/` の中ではない）
+- `uploads/posts/` は Flask の静的ファイル機能の対象外なので、`/uploads/posts/<filename>`（`uploaded_file`）で `send_from_directory` を使って返す
   - 例: テンプレートで `url_for('uploaded_file', filename=post.image_filename)`
 
 ## 5. 実装順のおすすめ
@@ -96,7 +97,7 @@
 1. `/register`
 2. `/login`、`/logout`
 3. `/posts/new`
-4. `/`（投稿一覧）、`/uploads/<filename>`
+4. `/`（投稿一覧）、`/uploads/posts/<filename>`
 5. `/posts/<int:post_id>`
 6. `/posts/<int:post_id>/delete`
 7. `/posts/<int:post_id>/like`（余裕があれば）

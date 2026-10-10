@@ -9,3 +9,6 @@ __pycache__/
 *.db-journal
 # Flask の instance フォルダ
 instance/
+# アップロードされた写真（フォルダは .gitkeep で残す）
+uploads/posts/*
+!uploads/posts/.gitkeep

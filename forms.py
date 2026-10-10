@@ -1,8 +1,19 @@
 from flask_wtf import FlaskForm
-from wtforms import EmailField, PasswordField, StringField, SubmitField
+from flask_wtf.file import FileAllowed, FileField, FileRequired
+from wtforms import EmailField, PasswordField, StringField, SubmitField, TextAreaField
 from wtforms.validators import DataRequired, Email, Length, ValidationError
 
 from models import User
+
+ALLOWED_EXTENSIONS = ["png", "jpg", "jpeg", "gif"]
+
+# 拡張子ごとの、ファイル先頭のバイト列（本当にその形式の画像かを確かめるため）
+IMAGE_SIGNATURES = {
+    "png": (b"\x89PNG\r\n\x1a\n",),
+    "jpg": (b"\xff\xd8\xff",),
+    "jpeg": (b"\xff\xd8\xff",),
+    "gif": (b"GIF87a", b"GIF89a"),
+}
 
 
 def strip_text(value):
@@ -60,3 +71,27 @@ class LoginForm(FlaskForm):
         validators=[DataRequired(message="パスワードを入力してください")],
     )
     submit = SubmitField("ログイン")
+
+
+# 投稿作成フォーム
+class PostForm(FlaskForm):
+    image = FileField(
+        "写真",
+        validators=[
+            FileRequired(message="写真を選んでください"),
+            FileAllowed(ALLOWED_EXTENSIONS, message="png・jpg・jpeg・gif の画像を選んでください"),
+        ],
+    )
+    caption = TextAreaField(
+        "キャプション",
+        filters=[strip_text],
+        validators=[Length(max=140, message="キャプションは140文字以内で入力してください")],
+    )
+
+    # 拡張子だけでなく、ファイルの中身が本当にその形式の画像かを確かめる
+    def validate_image(self, field):
+        extension = field.data.filename.rsplit(".", 1)[-1].lower()
+        head = field.data.stream.read(8)
+        field.data.stream.seek(0)
+        if not head.startswith(IMAGE_SIGNATURES[extension]):
+            raise ValidationError("画像ファイルとして読み込めません")

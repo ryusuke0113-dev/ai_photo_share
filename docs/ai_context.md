@@ -37,7 +37,8 @@ ai_photo_share/
 ├── .env                # SECRET_KEY（Git に含めない）
 ├── .gitignore
 ├── app.db              # 自動生成（Git に含めない）
-├── uploads/            # アップロードされた写真（Git に含めない）
+├── uploads/
+│   └── posts/          # アップロードされた写真（.gitkeep 以外は Git に含めない）
 ├── docs/
 ├── static/
 │   └── css/
@@ -51,8 +52,8 @@ ai_photo_share/
     └── login.html
 ```
 
-**画像の保存先は、プロジェクト直下の `uploads/` である。`static/uploads/` ではない。**
-写真は `/uploads/<filename>`（関数名 `uploaded_file`）で `send_from_directory` を使って返す。
+**画像の保存先は、プロジェクト直下の `uploads/posts/` である。`static/` の中ではない。**
+写真は `/uploads/posts/<filename>`（関数名 `uploaded_file`）で `send_from_directory` を使って返す。
 
 ## 4. 設計書
 
@@ -70,7 +71,7 @@ ai_photo_share/
 - 登録成功後は `/login` へ、ログイン・ログアウト・投稿・削除の成功後は `/` へリダイレクトする
 - メールアドレスと表示名は、どちらも重複不可
 - 表示名は 30 文字まで、キャプションは 140 文字まで（キャプションは空欄可）、パスワードは 8 文字以上
-- 写真は JPG・PNG のみ、5MB まで
+- 写真は png・jpg・jpeg・gif のみ、5MB まで。拡張子に加えてファイル先頭のバイト列でも形式を確認する
 - 投稿一覧は新しい順に縦1列で表示し、ページ分けはしない
 - 削除ボタンといいねボタンは、投稿詳細画面にだけ置く（一覧には置かない）
 - 削除できるのは投稿者本人のみ。他人の投稿の削除は 403
