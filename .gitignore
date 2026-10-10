@@ -1,1 +1,11 @@
 .venv/
+# 環境変数（SECRET_KEY など）
+.env
+# Python のキャッシュ
+__pycache__/
+*.py[cod]
+# SQLite のデータベース
+*.db
+*.db-journal
+# Flask の instance フォルダ
+instance/
