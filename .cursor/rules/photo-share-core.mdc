@@ -1,0 +1,41 @@
+---
+description: 写真共有アプリ（Flask + Peewee）の基本ルール。技術・作業範囲・秘密情報・画像の保存先を定める
+alwaysApply: true
+---
+
+# 写真共有アプリ 基本ルール
+
+## 詳細の参照先
+
+- 作業前に `docs/ai_context.md` と `docs/coding_rules.md` を読む
+- 実装するタスクは `docs/tasks.md`、仕様は `docs/` の各設計書に従う
+
+## 技術
+
+- Web フレームワークは Flask、ORM は Peewee、データベースは SQLite
+- Django・FastAPI・SQLAlchemy など、別の技術に置き換えない
+- `requirements.txt` にないパッケージは、ユーザーの了承なしに追加しない
+
+## 作業範囲
+
+- 1回の依頼で実装するのは `docs/tasks.md` のタスク1つだけ
+- 依頼されていない機能・画面・ルートを先回りして追加しない
+- 設計書にない変更が必要なら、実装せずに提案して確認する
+
+## 秘密情報
+
+- `SECRET_KEY` などはコードに書かず、`.env` から読み込む
+- `.env`・`app.db`・`uploads/` を Git に含めない
+
+```python
+# NG
+app.config["SECRET_KEY"] = "my-secret"
+# OK
+app.config["SECRET_KEY"] = os.environ["SECRET_KEY"]
+```
+
+## 画像の保存先
+
+- アップロードした写真は、プロジェクト直下の `uploads/` に保存する
+- `static/` の中（`static/uploads/` など）には置かない
+- 表示は `url_for("uploaded_file", filename=...)` を使い、`send_from_directory` で返す

@@ -148,7 +148,7 @@
 - 拡張子のチェック（JPG・PNG）はサーバー側で必ず行う
 - Flask の `MAX_CONTENT_LENGTH` 設定で、5MB を超えるファイルを受け付けないようにする
 - フォームには `enctype="multipart/form-data"` を付けないとファイルが送信されない
-- アップロード先のフォルダ（例: `static/uploads/`）は `.gitignore` に追加し、写真を Git に含めない
+- アップロード先はプロジェクト直下の `uploads/` とし、`.gitignore` に追加して写真を Git に含めない
 
 ### 6.4 データベース
 

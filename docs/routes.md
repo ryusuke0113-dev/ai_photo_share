@@ -17,6 +17,7 @@
 | `/login` | POST | `login` | ログイン処理 | 不要 | `/` へリダイレクト |
 | `/logout` | GET | `logout` | ログアウト | 不要 | `/` へリダイレクト |
 | `/posts/<int:post_id>/like` | POST | `post_like` | いいね／取り消し（余裕があれば） | **必要** | `/posts/<post_id>` へリダイレクト |
+| `/uploads/<filename>` | GET | `uploaded_file` | `uploads/` の写真を返す | 不要 | 画像ファイルを返す |
 
 - 関数名は、テンプレートで `url_for('関数名')` と書くときに使う名前です。
 - GET と POST が同じ URL のものは、1つの関数で `methods=["GET", "POST"]` として処理します。
@@ -53,7 +54,7 @@
 - GET: 登録フォームを表示する
 - POST: 入力をチェックして保存する
   - 成功: パスワードをハッシュ化してユーザーを保存し、`/login` へリダイレクト
-  - 失敗（未入力・メールアドレス重複）: エラーメッセージを表示し、`register.html` を再表示
+  - 失敗（未入力・表示名が 30 文字超・メールアドレス重複・表示名重複）: エラーメッセージを表示し、`register.html` を再表示
 
 ### `/login`（login）
 
@@ -82,9 +83,9 @@
 
 ## 4. 写真の表示
 
-- アップロードした写真は `static/uploads/` に保存する
-- 写真は Flask の静的ファイル機能で表示するため、専用のルートは作らない
-  - 例: テンプレートで `url_for('static', filename='uploads/ファイル名')`
+- アップロードした写真は、プロジェクト直下の `uploads/` に保存する（`static/` の中ではない）
+- `uploads/` は Flask の静的ファイル機能の対象外なので、`/uploads/<filename>`（`uploaded_file`）で `send_from_directory` を使って返す
+  - 例: テンプレートで `url_for('uploaded_file', filename=post.image_filename)`
 
 ## 5. 実装順のおすすめ
 
@@ -93,7 +94,7 @@
 1. `/register`
 2. `/login`、`/logout`
 3. `/posts/new`
-4. `/`（投稿一覧）
+4. `/`（投稿一覧）、`/uploads/<filename>`
 5. `/posts/<int:post_id>`
 6. `/posts/<int:post_id>/delete`
 7. `/posts/<int:post_id>/like`（余裕があれば）
