@@ -88,10 +88,14 @@
 
 ## 5. 実装順のおすすめ
 
-1. `/`（投稿一覧。最初は投稿0件の表示だけでよい）
-2. `/register`
-3. `/login`、`/logout`
-4. `/posts/new`
+`docs/requirements.md` の第3章と同じ順番です。
+
+1. `/register`
+2. `/login`、`/logout`
+3. `/posts/new`
+4. `/`（投稿一覧）
 5. `/posts/<int:post_id>`
 6. `/posts/<int:post_id>/delete`
 7. `/posts/<int:post_id>/like`（余裕があれば）
+
+ログイン・ログアウト・投稿のあとは `/` へリダイレクトするため、`/` は 2 の時点で「仮のページ」（文字を表示するだけ）を用意しておき、4 で投稿一覧として完成させます。
